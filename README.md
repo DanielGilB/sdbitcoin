@@ -17,10 +17,10 @@ mysql.database= "..."
 mysql.password= "..."  
 mysql.host= "..."
 
-twitter.accessKey = "..."
-twitter.accessSecret = "..."
-twitter.consumerKey = "..."
-twitter.consumerSecret = "..."
+twitter.accessKey = "..."  
+twitter.accessSecret = "..."  
+twitter.consumerKey = "..."  
+twitter.consumerSecret = "..."  
 
 You need create the following mysql struct:  
 
