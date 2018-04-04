@@ -5,8 +5,7 @@ Get Bitcoin price data from HTTP as JSON then create a JAVA object then compare 
 ## How to use
 You need to create sdbitcoin/src/main/app/mule-app.properties with the following information:
 
-mail.user= "..."  
-mail.subject= "..."  
+mail.user= "..."   
 mail.to= "..."  
 mail.from= "..."  
 mail.host= "..."  
@@ -16,12 +15,16 @@ mysql.port= "..."
 mysql.user= "..."  
 mysql.database= "..."  
 mysql.password= "..."  
-mysql.host= "..."  
+mysql.host= "..."
+
+twitter.accessKey = "..."
+twitter.accessSecret = "..."
+twitter.consumerKey = "..."
+twitter.consumerSecret = "..."
 
 You need create the following mysql struct:  
 
 CREATE TABLE recomendaciones (  
-id INT(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY,  
 nombre VARCHAR(14) NOT NULL,  
 precio FLOAT NOT NULL,  
 cambio1h FLOAT NOT NULL,  
