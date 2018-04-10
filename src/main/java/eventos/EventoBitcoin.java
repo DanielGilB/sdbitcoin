@@ -62,8 +62,8 @@ public class EventoBitcoin {
 	@Override
 	public String toString() {
 		return "Precio "+ nombre_ +": " + precio_ + " euros.\n"
-				+ "% ultima hora: " + cambio1h_ + "\n"
-						+ "% ultimas 24 hooras: " + cambio24h_ + "\n"
-								+ "% ultimos 7 dias: " + cambio7d_ ;
+				+ "% última hora: " + cambio1h_ + "\n"
+						+ "% últimas 24 horas: " + cambio24h_ + "\n"
+								+ "% últimos 7 días: " + cambio7d_ ;
 	}
 }

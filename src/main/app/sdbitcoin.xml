@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<mule xmlns:facebook="http://www.mulesoft.org/schema/mule/facebook" xmlns:wmq="http://www.mulesoft.org/schema/mule/ee/wmq" xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:twitter="http://www.mulesoft.org/schema/mule/twitter" xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:s3="http://www.mulesoft.org/schema/mule/s3" xmlns:json="http://www.mulesoft.org/schema/mule/json" xmlns:smtps="http://www.mulesoft.org/schema/mule/smtps" xmlns:smtp="http://www.mulesoft.org/schema/mule/smtp" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+<mule xmlns:batch="http://www.mulesoft.org/schema/mule/batch" xmlns:facebook="http://www.mulesoft.org/schema/mule/facebook" xmlns:wmq="http://www.mulesoft.org/schema/mule/ee/wmq" xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:twitter="http://www.mulesoft.org/schema/mule/twitter" xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:s3="http://www.mulesoft.org/schema/mule/s3" xmlns:json="http://www.mulesoft.org/schema/mule/json" xmlns:smtps="http://www.mulesoft.org/schema/mule/smtps" xmlns:smtp="http://www.mulesoft.org/schema/mule/smtp" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
 	xmlns:spring="http://www.springframework.org/schema/beans" 
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
@@ -15,7 +15,8 @@ http://www.mulesoft.org/schema/mule/twitter http://www.mulesoft.org/schema/mule/
 http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
 http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd
 http://www.mulesoft.org/schema/mule/ee/wmq http://www.mulesoft.org/schema/mule/ee/wmq/current/mule-wmq-ee.xsd
-http://www.mulesoft.org/schema/mule/facebook http://www.mulesoft.org/schema/mule/facebook/current/mule-facebook.xsd">
+http://www.mulesoft.org/schema/mule/facebook http://www.mulesoft.org/schema/mule/facebook/current/mule-facebook.xsd
+http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/batch/current/mule-batch.xsd">
     <http:request-config name="HTTP_Request_Configuration" host="api.coinmarketcap.com" port="80" basePath="v1/ticker/?convert=EUR&amp;limit=5" doc:name="HTTP Request Configuration"/>
     <spring:beans>
         <spring:bean id="transformador" name="Bean" class="eventos.Transformador"/>
@@ -31,7 +32,13 @@ http://www.mulesoft.org/schema/mule/facebook http://www.mulesoft.org/schema/mule
         <auto-transformer returnClass="eventos.EventoBitcoin" name="JsonDataToEventoBitcoin"></auto-transformer>
         <choice doc:name="Choice">
             <when expression="#[payload.getPrecio() > 5000 ]">
-                <smtps:outbound-endpoint host="${mail.host}" user="${mail.user}" password="${mail.password}" to="${mail.to}" from="${mail.from}" subject="SDBitcoin - INFO" responseTimeout="10000" doc:name="SMTP"/>
+                <async doc:name="Async">
+                    <db:select config-ref="MySQL_Configuration" doc:name="Database">
+                        <db:parameterized-query><![CDATA[SELECT email FROM emails]]></db:parameterized-query>
+                    </db:select>
+                    <set-variable doc:name="Variable" value="#[payload[0]['email']]" variableName="emails"/>
+                </async>
+                <smtps:outbound-endpoint host="${mail.host}" user="${mail.user}" password="${mail.password}" to="${mail.to}" from="${mail.from}" subject="#[flowVars.emails]" responseTimeout="10000" doc:name="SMTP"/>
                 <async doc:name="Async">
                     <db:insert config-ref="MySQL_Configuration" doc:name="Database">
                         <db:parameterized-query><![CDATA[INSERT INTO recomendaciones (nombre, precio, cambio1h, cambio24h, cambio7d) VALUES (#[payload.getNombre()], #[payload.getPrecio()], #[payload.getCambio1h()],  #[payload.getCambio24h()],  #[payload.getCambio7d()])]]></db:parameterized-query>
