@@ -15,5 +15,6 @@
 	<classpathentry kind="src" path="src/main/java"/>
 	<classpathentry kind="con" path="MULE_LIB/Twitter/org.mule.tooling.ui.contribution.twitter.3.6.0"/>
 	<classpathentry kind="con" path="MULE_LIB/Facebook/org.mule.tooling.ui.contribution.facebook.3.5.0"/>
+	<classpathentry kind="con" path="MULE_LIB/Anypoint MQ/org.mule.tooling.messaging.contribution"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

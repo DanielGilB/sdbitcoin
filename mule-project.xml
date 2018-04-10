@@ -5,4 +5,5 @@
     <muleExtension name="Amazon S3" qualifier="org.mule.tooling.ui.contribution.s3.3.5.0"/>
     <muleExtension name="Twitter" qualifier="org.mule.tooling.ui.contribution.twitter.3.6.0"/>
     <muleExtension name="Facebook" qualifier="org.mule.tooling.ui.contribution.facebook.3.5.0"/>
+    <muleExtension name="Anypoint MQ" qualifier="org.mule.tooling.messaging.contribution"/>
 </mule-project>

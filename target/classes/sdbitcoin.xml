@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<mule xmlns:batch="http://www.mulesoft.org/schema/mule/batch" xmlns:facebook="http://www.mulesoft.org/schema/mule/facebook" xmlns:wmq="http://www.mulesoft.org/schema/mule/ee/wmq" xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:twitter="http://www.mulesoft.org/schema/mule/twitter" xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:s3="http://www.mulesoft.org/schema/mule/s3" xmlns:json="http://www.mulesoft.org/schema/mule/json" xmlns:smtps="http://www.mulesoft.org/schema/mule/smtps" xmlns:smtp="http://www.mulesoft.org/schema/mule/smtp" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+<mule xmlns:email="http://www.mulesoft.org/schema/mule/email"
+	xmlns:batch="http://www.mulesoft.org/schema/mule/batch" xmlns:facebook="http://www.mulesoft.org/schema/mule/facebook" xmlns:wmq="http://www.mulesoft.org/schema/mule/ee/wmq" xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:twitter="http://www.mulesoft.org/schema/mule/twitter" xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:s3="http://www.mulesoft.org/schema/mule/s3" xmlns:json="http://www.mulesoft.org/schema/mule/json" xmlns:smtps="http://www.mulesoft.org/schema/mule/smtps" xmlns:smtp="http://www.mulesoft.org/schema/mule/smtp" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
 	xmlns:spring="http://www.springframework.org/schema/beans" 
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/email http://www.mulesoft.org/schema/mule/email/current/mule-email.xsd
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
 http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
 http://www.mulesoft.org/schema/mule/smtp http://www.mulesoft.org/schema/mule/smtp/current/mule-smtp.xsd
@@ -30,21 +32,25 @@ http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/ba
         </poll>
         <json:json-to-object-transformer doc:name="JSON to Object"/>
         <auto-transformer returnClass="eventos.EventoBitcoin" name="JsonDataToEventoBitcoin"></auto-transformer>
+        <set-variable variableName="cuerpo" value="#[payload]" doc:name="mensaje"/>
         <choice doc:name="Choice">
             <when expression="#[payload.getPrecio() > 5000 ]">
-                <async doc:name="Async">
-                    <db:select config-ref="MySQL_Configuration" doc:name="Database">
-                        <db:parameterized-query><![CDATA[SELECT email FROM emails]]></db:parameterized-query>
-                    </db:select>
-                    <set-variable doc:name="Variable" value="#[payload[0]['email']]" variableName="emails"/>
-                </async>
-                <smtps:outbound-endpoint host="${mail.host}" user="${mail.user}" password="${mail.password}" to="${mail.to}" from="${mail.from}" subject="#[flowVars.emails]" responseTimeout="10000" doc:name="SMTP"/>
+
+             
                 <async doc:name="Async">
                     <db:insert config-ref="MySQL_Configuration" doc:name="Database">
                         <db:parameterized-query><![CDATA[INSERT INTO recomendaciones (nombre, precio, cambio1h, cambio24h, cambio7d) VALUES (#[payload.getNombre()], #[payload.getPrecio()], #[payload.getCambio1h()],  #[payload.getCambio24h()],  #[payload.getCambio7d()])]]></db:parameterized-query>
                     </db:insert>
                 </async>
                 <twitter:update-status config-ref="Twitter__Configuration" status="#[payload + '\n\n' + server.dateTime.format(&quot;dd-MM-yyyy HH:mm:ss&quot;)]" doc:name="Twitter"/>
+                <db:select config-ref="MySQL_Configuration" doc:name="Database">
+                    <db:parameterized-query><![CDATA[SELECT email FROM emails]]></db:parameterized-query>
+                </db:select>
+                <foreach collection="#[payload.email]" counterVariableName="i" doc:name="For Each" rootMessageVariableName="em">
+                    <set-variable variableName="emails" value="#[payload[0]['email']]" doc:name="emails" encoding="ISO-8859-2"/>
+                    <set-payload value="#[flowVars.cuerpo]" doc:name="Set Payload"/>
+                    <smtps:outbound-endpoint host="${mail.host}" user="${mail.user}" password="${mail.password}" to="${mail.to}" from="${mail.from}" subject="#[flowVars.emails]" responseTimeout="10000" doc:name="SMTP"/>
+                </foreach>
             </when>
             <otherwise>
                 <twitter:update-status config-ref="Twitter__Configuration" status="#[payload + '\n\n' + server.dateTime.format(&quot;dd:MM:yyyy HH:mm:ss&quot;)]" doc:name="Twitter"/>
