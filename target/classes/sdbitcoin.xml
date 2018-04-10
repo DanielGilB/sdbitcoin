@@ -46,9 +46,11 @@ http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/ba
                 <db:select config-ref="MySQL_Configuration" doc:name="Database">
                     <db:parameterized-query><![CDATA[SELECT email FROM emails]]></db:parameterized-query>
 				</db:select>
-                    <set-variable variableName="emails" value="#[payload]" doc:name="emails" />
+                    <set-variable variableName="emails" value="#[payload]" doc:name="emails"/>
+                <foreach doc:name="For Each" collection="#[flowVars.emails]" counterVariableName="i">
                     <set-payload value="#[flowVars.cuerpo]" doc:name="Set Payload"/>
-                    <smtps:outbound-endpoint host="${mail.host}" user="${mail.user}" password="${mail.password}" to="${mail.to}" from="${mail.from}" subject="#[flowVars.emails[1]['email']]" responseTimeout="10000" doc:name="SMTP"/>
+                    <smtps:outbound-endpoint host="${mail.host}" user="${mail.user}" password="${mail.password}" to="#[flowVars.emails[(i-1)]['email']]" from="${mail.from}" subject="SDBitcoin - Recomendaci&#243;n de compra" responseTimeout="10000" doc:name="SMTP"/>
+                </foreach>
             </when>
             <otherwise>
                 <twitter:update-status config-ref="Twitter__Configuration" status="#[payload + '\n\n' + server.dateTime.format(&quot;dd:MM:yyyy HH:mm:ss&quot;)]" doc:name="Twitter"/>
